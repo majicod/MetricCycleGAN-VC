@@ -1,0 +1,1 @@
+%%% MetricCycleGAN-VC uses mainly the same blocks of MaskCycleGAN-VC paper but since there is no official implementation we used the unofficial version. The main changes appear in our "train.py" file. 
