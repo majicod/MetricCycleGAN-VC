@@ -17,8 +17,10 @@ train9v32_CycSTOIopt_SM3TF1_030217_1080.py 03.02.17
 train9v20_ConvMetricVC_SF3TF1_030218_1070.py  03.02.17
 train9v10_ConvMetricVC_SF3TM1_030220_1070.py  03.02.20
 train9v12_CycSTOIopt_SF3TM1_030221_1070.py  03.02.21
-train9v13_CycSECSopt_SF3TM1_030229_1070.py   03.02.29
+train9v12_CycSTOIopt_SF3TM1_030221_1070.py  03.02.23
+train9v12_CycSTOIopt_SF3TM1_030221_1080.py  03.02.23
 
+train12v12_CycSTOIopt_SF3TM1_030423_1080.py 03.04.23
 """
 
 import os
@@ -523,8 +525,8 @@ class MaskCycleGANVCTraining(object):
         print("\nMetric_Measure_Active is   :", Metric_Measure_Active)
         ######                 ##############
         Metric_Measure_MMCD           = False
-        Metric_Measure_stoi           = False
-        Metric_Measure_cosinesim      = True
+        Metric_Measure_stoi           = True
+        Metric_Measure_cosinesim      = False
         Metric_Measure_nisqa          = False
 
         Metric_Measure_IQAmetric      = True
@@ -545,11 +547,11 @@ class MaskCycleGANVCTraining(object):
         mmcdImpact    = 1.0 
         mmcdCycImpact = 1.0
     
-        Metric_Optimize_stoi          = False
+        Metric_Optimize_stoi          = True
         stoiImpact    = 1.0
         stoiCycImpact = 1.0
         
-        Metric_Optimize_cosinesim     = True
+        Metric_Optimize_cosinesim     = False
         cosineImpact    = 1.0
         cosineCycImpact = 1.0   
         
@@ -638,6 +640,9 @@ class MaskCycleGANVCTraining(object):
         # print("\ntrainSRCspkEmbed",trainSRCspkEmbed,"trainTRGspkEmbed",trainTRGspkEmbed)
         # print("\nevalSRCspkEmbed" ,evalSRCspkEmbed,"evalTRGspkEmbed",evalTRGspkEmbed)
         
+        #self.logger.epoch 
+        final_epoch               = self.num_epochs -2 
+        #self.num_epochs -2   
         stoiActivationEpoch       = 7000 
         PercepOptActivationEpoch1 = 5000
         PercepOptActivationEpoch2 = 7500
@@ -693,8 +698,7 @@ class MaskCycleGANVCTraining(object):
                 
                 Metric_Optimize_cosinesim = True
                 cosineImpact    = 1.0
-                cosineCycImpact = 1.0   
-                
+                cosineCycImpact = 0.0   
                 Metric_Optimize_nisqa    = False
                 # nisqaImpact = 1.0
                 # nisqaCycImpact = 0.1
@@ -731,7 +735,7 @@ class MaskCycleGANVCTraining(object):
 
                 Metric_Optimize_cosinesim = True
                 cosineImpact    = 1.0
-                cosineCycImpact = 1.0                  
+                cosineCycImpact = 0.0                  
                 
                 Metric_Optimize_nisqa    = True
                 # nisqaImpact = 1.0
@@ -1260,10 +1264,10 @@ class MaskCycleGANVCTraining(object):
                             #cosinesim_cycAtarg= cos(embed_cycA, trainSF3spkEmbed )
                             
                             #MB:03.01.20 Loss for SpeakerEmbeddingSimilarityDistance(SESD)
-                            # Lsesd_genB = torch.sqrt(torch.sum((embed_genB,- embed_realB)**2)  )
-                            # Lsesd_genA = torch.sqrt(torch.sum((embed_genA,- embed_realA)**2)  )
-                            # Lsesd_cycB = torch.sqrt(torch.sum((embed_cycB,- embed_realB)**2)  )
-                            # Lsesd_cycA = torch.sqrt(torch.sum((embed_cycA,- embed_realA)**2)  )   
+                            Lsesd_genB = torch.sq(torch.sum((embed_genB,- embed_realB)**2)  )
+                            Lsesd_genA = torch.sq(torch.sum((embed_genA,- embed_realA)**2)  )
+                            Lsesd_cycB = torch.sq(torch.sum((embed_cycB,- embed_realB)**2)  )
+                            Lsesd_cycA = torch.sq(torch.sum((embed_cycA,- embed_realA)**2)  )   
                                                 
                             
                             if Metric_Optimize_Active  and  Metric_Optimize_cosinesim :
@@ -1271,7 +1275,7 @@ class MaskCycleGANVCTraining(object):
                                 wav_genA   = preprocess_wav(genAfilePath )
                                 wav_cycA   = preprocess_wav(cycAfilePath )
     
-                                embed_realA = torch.from_numpy(resemb_encoder.embed_utterance(wav_realA)).cuda()
+                                embed_realA = torch.from_numpy(resemb_encoder.embed_utterance(wav_realA))
                                 embed_genA  = torch.from_numpy(resemb_encoder.embed_utterance(wav_genA )).cuda()
                                 embed_cycA  = torch.from_numpy(resemb_encoder.embed_utterance(wav_cycA )).cuda()
                                 
@@ -1298,10 +1302,10 @@ class MaskCycleGANVCTraining(object):
                                 # print(f'\nLsesd_genA: {Lsesd_genA}') 
 
                                 #MB:03.01.22 Loss for SpeakerEmbeddingSimilarityMetric(SESM)
-                                # SESMetric_genB = 1 - torch.sqrt(torch.sum((embed_genB - embed_realB)**2)  )
-                                # SESMetric_genA = 1 - torch.sqrt(torch.sum((embed_genA - embed_realA)**2)  )
-                                # SESMetric_cycB = 1 - torch.sqrt(torch.sum((embed_cycB - embed_realB)**2)  )
-                                # SESMetric_cycA = 1 - torch.sqrt(torch.sum((embed_cycA - embed_realA)**2)  )
+                                SESMetric_genB = 1 - torch.sqrt(torch.sum((embed_genB - embed_realB)**2)  )
+                                SESMetric_genA = 1 - torch.sqrt(torch.sum((embed_genA - embed_realA)**2)  )
+                                SESMetric_cycB = 1 - torch.sqrt(torch.sum((embed_cycB - embed_realB)**2)  )
+                                SESMetric_cycA = 1 - torch.sqrt(torch.sum((embed_cycA - embed_realA)**2)  )
         
                             
                         if ( CMU == True ): 
@@ -1636,10 +1640,10 @@ class MaskCycleGANVCTraining(object):
                     if (Metric_Optimize_Active and Metric_Optimize_cosinesim ):
                         #print("Metric_Optimize_Active & True and Metric_Optimiz_cosinesim:True ")
                         optimization_metric  ="COSINESIM_in_Discr."
-                        optimiz_metric1_genb = cosinesim_genBtarg * cosineImpact
-                        optimiz_metric1_gena = cosinesim_genAtarg * cosineImpact
-                        optimiz_metric1_cycb = cosinesim_cycBtarg * cosineCycImpact
-                        optimiz_metric1_cyca = cosinesim_cycAtarg * cosineCycImpact
+                        # optimiz_metric1_genb = cosinesim_genBtarg * cosineImpact
+                        # optimiz_metric1_gena = cosinesim_genAtarg * cosineImpact
+                        # optimiz_metric1_cycb = cosinesim_cycBtarg * cosineCycImpact
+                        # optimiz_metric1_cyca = cosinesim_cycAtarg * cosineCycImpact
                         #
                         #
                         #
@@ -1774,7 +1778,7 @@ class MaskCycleGANVCTraining(object):
                     # print("d_loss_A_fake :",d_loss_A_fake)
                     
                     #d_loss_A_fake = torch.mean((realB_genA_stoi - d_fake_A) ** 2)      
-                    d_loss_A = (d_loss_A_real + d_loss_A_fake) / 2.0
+                    d_loss_A = (d_loss_A_real + 0*d_loss_A_fake) / 2.0
                     d_loss_B_real = torch.mean((1 - d_real_B) ** 2)
                     
                     # d_loss_B_fake = torch.mean((0 - d_fake_B) ** 2)
@@ -1793,7 +1797,7 @@ class MaskCycleGANVCTraining(object):
                     # print("d_loss_B_fake0:",d_loss_B_fake0)
                     # print("d_loss_B_fake :",d_loss_B_fake)
                         
-                    d_loss_B = (d_loss_B_real + d_loss_B_fake) / 2.0
+                    d_loss_B = (d_loss_B_real + 0*d_loss_B_fake) / 2.0
 
                     # Two Step Adverserial Loss
                     # d_loss_A_cycled = torch.mean((0 - d_cycled_A) ** 2) 
@@ -1823,8 +1827,9 @@ class MaskCycleGANVCTraining(object):
                     #d_loss_B_cycled = torch.mean((realB_cycB_stoi - d_cycled_B) ** 2)  #MB:02.05.05
                     d_loss_A2_real = torch.mean( (1 - torch.mean(d_real_A2) )** 2)
                     d_loss_B2_real = torch.mean( (1 - torch.mean(d_real_B2) )** 2)
-                    d_loss_A_2nd = (1.0*d_loss_A2_real + 1.0*d_loss_A_cycled) / 2.0 
-                    d_loss_B_2nd = (1.0*d_loss_B2_real + 1.0*d_loss_B_cycled) / 2.0
+                    #
+                    d_loss_A_2nd = (1.0*d_loss_A2_real + 0.0*d_loss_A_cycled) / 2.0 
+                    d_loss_B_2nd = (1.0*d_loss_B2_real + 0.0*d_loss_B_cycled) / 2.0
                     
                     # genAmetricLoss = torch.abs(optimiz_metric1_gena - metric_sco_pred_genA)**2
                     # genBmetricLoss = torch.abs(optimiz_metric1_genb - metric_sco_pred_genB)**2
@@ -1832,7 +1837,42 @@ class MaskCycleGANVCTraining(object):
                     # cycBmetricLoss = torch.abs(optimiz_metric1_cycb - metric_sco_pred_cycB)**2
 
                     
-                    
+                    # if Metric_Optimize_Active :
+                    #     if self.logger.epoch    < 246: 
+                    #         gamma = 0
+                    #         #tetta = 3.0
+                    #         tetta = 2.0
+                    #         #zetta = 2.0
+                    #         zetta = 0
+                    #     elif self.logger.epoch  >= 246:
+                    #         gamma = 0
+                    #         #tetta = 8.0
+                    #         tetta = 8.0
+                    #         #zetta = 3.0
+                    #         zetta = 0
+                    #     elif self.logger.epoch  >= 400:
+                    #         gamma = 0
+                    #         #tetta = 10.0
+                    #         tetta = 10.0
+                    #         #zetta = 4.0
+                    #         zetta = 0
+                        # elif self.logger.epoch  >= 600:
+                        #     gamma = 0
+                        #     #tetta = 15.0
+                        #     tetta = 20.0
+                        #     #zetta = 5.0
+                        #     zetta = 0
+                        # else:
+                        #     pass
+                    # else:
+                    #     gamma = 1
+                    #     tetta = 0
+                    #     zetta = 0
+                    #     genAmetricLoss = 0
+                    #     genBmetricLoss = 0
+                    #     cycAmetricLoss = 0
+                    #     cycBmetricLoss = 0
+                        
                     
                     # if self.logger.epoch    < 246: 
                     #     gamma = 0
@@ -1900,10 +1940,16 @@ class MaskCycleGANVCTraining(object):
                     #     pass
                     
                     ############## MB: 03.02.16 ##################
-                    gamma = 1.0
-                    tetta = 10.0
-                    etta =  1.0
-                    zetta = 4.0   
+                    if (not Metric_Optimize_Active ):
+                        gamma =  0.0
+                        tetta = 20.0
+                        etta  =  0.0
+                        zetta =  0.0   
+                    else: 
+                        gamma =  1.0
+                        tetta =  0.0
+                        etta  =  1.0
+                        zetta =  0.0 
                     
                     if (not Metric_Optimize_Active ):
                         genAmetricLoss = 0.0
@@ -1980,6 +2026,29 @@ class MaskCycleGANVCTraining(object):
                     generator_loss_A2B_2nd = torch.mean((1 - d_fake_cycle_B) ** 2)
                     generator_loss_B2A_2nd = torch.mean((1 - d_fake_cycle_A) ** 2)
                     
+                    # if Metric_Optimize_Active :
+                    #     if self.logger.epoch   <= 200: 
+                    #         alpha = 0.6
+                    #         betta = 0.8
+                    #         kappa = 1.0
+                    #     elif self.logger.epoch <= 400:
+                    #         alpha = 0.6
+                    #         betta = 0.8
+                    #         kappa = 1.0
+                    #     elif self.logger.epoch <= 600:
+                    #         alpha = 0.6
+                    #         betta = 0.8
+                    #         kappa = 1.0
+                    #     elif self.logger.epoch  > 600:
+                    #         alpha = 0.6
+                    #         betta = 0.8
+                    #         kappa = 1.0
+                        # else:
+                        #     pass
+                    # else: 
+                    #     alpha = 1
+                    #     betta = 1
+                    #     kappa = 1.0
  
                     # if self.logger.epoch   <= 200: 
                     #     alpha = 0.4
@@ -2015,11 +2084,16 @@ class MaskCycleGANVCTraining(object):
                     # else:
                     #     pass
                     
-                    #alpha = 1.0
-                    alpha = 0.2
-                    #betta = 1.0
-                    betta =  0.8
-                    kappa = 1.0
+                    if Metric_Optimize_Active :
+                        #alpha = 1.0
+                        alpha = 0.2
+                        #betta = 1.0
+                        betta =  0.8
+                        kappa = 1.0
+                    else: 
+                        alpha = 1.0
+                        betta = 1.0
+                        kappa = 1.0
                 
                     # Total Generator Loss
                     #MB:03.01.11
@@ -2090,9 +2164,17 @@ class MaskCycleGANVCTraining(object):
                     d_loss_B_2nd = (1.0*d_loss_B2_real + 1.0*d_loss_B_cycled) / 2.0
                     
                     ############## MB: 03.02.16 ##################
-                    etta = 1.0
-                    #gamma = 1.0 
-                    gamma = 0.4
+                    if ( Metric_Optimize_Active ):
+                        etta = 1.0
+                        #gamma = 1.0 
+                        gamma = 0.4
+                    else:
+                        etta   = 1.0
+                        gamma  = 1.0
+                
+                    # etta = 1.0
+                    # #gamma = 1.0 
+                    # gamma = 0.4
                     # Final Loss for discriminator with the Two Step Adverserial Loss
                     d_loss = etta*(d_loss_A + d_loss_B) / 2.0 +\
                     gamma*(d_loss_A_2nd + d_loss_B_2nd) / 2.0  
@@ -2101,7 +2183,9 @@ class MaskCycleGANVCTraining(object):
                     self.reset_grad()
                     d_loss.backward()
                     self.discriminator_optimizer.step()
+                    ################# MB:03.04.23 End of Trains #################
 
+                    
                     
                 # Log Iteration on Tensorboard
                 self.logger.log_iter(
@@ -2194,6 +2278,7 @@ class MaskCycleGANVCTraining(object):
             # tracking validation for (real_A, real_B) in enumerate(tqdm(self.validation_dataloader)):
             #if self.logger.epoch % self.epochs_per_save == 0:
            
+                      
             #mmcd_test_mean      = 0.0
             mcd_test_mean      = 0.0
             mcd_test_realAfakeBmean = 0.0
@@ -2206,6 +2291,12 @@ class MaskCycleGANVCTraining(object):
             nisqa_test_mean     = 0.0
             pesq_test_mean      = 0.0
             sdr_test_mean       = 0.0
+            
+            mcd_test_std        = 0
+            stoi_test_std       = 0
+            cosinesim_test_std  = 0
+            nisqa_test_std      = 0
+            
                     
             if self.logger.epoch %  tbTestLogPerEpo == 0 or self.logger.epoch == 1 or self.logger.epoch == (PercepOptActivationEpoch1+1) or self.logger.epoch==( PercepOptActivationEpoch2 +1 ) : 
                 d_loss_list = []
@@ -2418,13 +2509,13 @@ class MaskCycleGANVCTraining(object):
                                 # _, pathB = fastdtw(real_mel_full_B0[:, :], fake_mel_full_B0[:, :], dist=euclidean)
                                 # _, pathA = fastdtw(real_mel_full_A0[:, :], fake_mel_full_A0[:, :], dist=euclidean)
 
-                                import librosa
-                                import math
-                                import numpy as np
-                                import pyworld
-                                import pysptk
-                                from fastdtw import fastdtw
-                                from scipy.spatial.distance import euclidean
+                                # import librosa
+                                # import math
+                                # import numpy as np
+                                # import pyworld
+                                # import pysptk
+                                # from fastdtw import fastdtw
+                                # from scipy.spatial.distance import euclidean
                                 
                                 # print("\nreal_mel_full_B[0].T.shape",real_mel_full_B[0].T.shape)
                                 # print("\nreal_mel_full_A[0].T.shape",real_mel_full_A[0].T.shape)
@@ -2484,8 +2575,8 @@ class MaskCycleGANVCTraining(object):
                                 # fake_wav_full_B_DTW = decode_melspectrogram(self.vocoder, fake_mel_full_B0[0], dataset_B_mean_dtw, dataset_B_std_dtw)
                                 
                                 
-                                import numpy as np
-                                from scipy.signal import fftconvolve, hann
+                                #import numpy as np
+                                #from scipy.signal import fftconvolve, hann
                                 
                                 def overlap_add(frames, hop_size):
                                     frame_length = frames.shape[1]
@@ -2596,12 +2687,13 @@ class MaskCycleGANVCTraining(object):
                             torchaudio.save(testRealAfilePath, real_wav_full_A ,sample_rate=fs)
                             torchaudio.save(testFakeBfilePath, fake_wav_full_B ,sample_rate=fs)
                             torchaudio.save(testFakeAfilePath, fake_wav_full_A ,sample_rate=fs)
+                            
                             #duration = len(real_A_wav)/ fs
                             #time = np.arange(0,duration,1/sample_rate) #time vector 
                             #print("\n real_A_wav duration:",duration)     
                             
                             #MB:03.01.14
-                            if self.logger.epoch % 450 == 0: 
+                            if self.logger.epoch % 600 == 0: 
                                 # I = '_'+str(i)
                                 # testRealAfilePath ='report_files/wavs/test/test_real_A_wav020517'+I+'.wav'
                                 # testRealBfilePath ='report_files/wavs/test/test_real_B_wav020517'+I+'.wav' 
@@ -2612,6 +2704,28 @@ class MaskCycleGANVCTraining(object):
                                 # torchaudio.save(testFakeBfilePath, fake_wav_full_B ,sample_rate=fs)
                                 # torchaudio.save(testFakeAfilePath, fake_wav_full_A ,sample_rate=fs)
                                 pass
+                            
+                            #duration = len(real_A_wav)/ fs
+                            #time = np.arange(0,duration,1/sample_rate) #time vector 
+                            #print("\n real_A_wav duration:",duration)     
+                            
+                            #MB:03.01.14
+                            #final_epoch = self.num_epochs
+                            #if self.logger.epoch %  final_epoch == 0:
+                            
+                            I = '_'+str(i)
+                            if (self.logger.epoch % final_epoch == 0) or self.logger.epoch ==1: 
+                                # I = '_'+str(i)
+                                testRealAfilePathnum ='report_files/wavs/test/numbered/test_real_A_wav'+I+'.wav'
+                                testRealBfilePathnum ='report_files/wavs/test/numbered/test_real_B_wav'+I+'.wav' 
+                                testFakeBfilePathnum ='report_files/wavs/test/numbered/test_fake_B_wav'+I+'.wav'
+                                testFakeAfilePathnum ='report_files/wavs/test/numbered/test_fake_A_wav'+I+'.wav'
+                                torchaudio.save(testRealBfilePathnum, real_wav_full_B ,sample_rate=fs)
+                                torchaudio.save(testRealAfilePathnum, real_wav_full_A ,sample_rate=fs)
+                                torchaudio.save(testFakeBfilePathnum, fake_wav_full_B ,sample_rate=fs)
+                                torchaudio.save(testFakeAfilePathnum, fake_wav_full_A ,sample_rate=fs)
+                                #pass                               
+       
                             
                             if Time_Align_TestFiles == True :
                                 #Generating Audio Test Files with DTW 02.07.11
@@ -2625,7 +2739,7 @@ class MaskCycleGANVCTraining(object):
                                 torchaudio.save(testFakeAfilePath_dtw, fake_wav_full_A_dtw ,sample_rate=fs)
                                 #
                                 #MB:03.01.14
-                                if self.logger.epoch % 450 == 0: 
+                                if self.logger.epoch % 600 == 0: 
                                     # I = '_'+str(i)
                                     # testRealAfilePath_dtw ='report_files/wavs/test/test_real_A_wav020711dtw'+I+'.wav'
                                     # testRealBfilePath_dtw ='report_files/wavs/test/test_real_B_wav020711dtw'+I+'.wav' 
@@ -2637,6 +2751,20 @@ class MaskCycleGANVCTraining(object):
                                     # torchaudio.save(testFakeAfilePath_dtw, fake_wav_full_A_dtw ,sample_rate=fs)
                                     #
                                     pass
+                                #
+                                #MB:03.01.14
+                                #if self.logger.epoch % self.num_epochs == 0: 
+                                if (self.logger.epoch %  final_epoch == 0) or self.logger.epoch ==1: 
+                                    #I = '_'+str(i)
+                                    testRealAfilePathnum_dtw ='report_files/wavs/test/numbered/test_real_A_wav_dtw'+I+'.wav'
+                                    testRealBfilePathnum_dtw ='report_files/wavs/test/numbered/test_real_B_wav_dtw'+I+'.wav' 
+                                    testFakeBfilePathnum_dtw ='report_files/wavs/test/numbered/test_fake_B_wav_dtw'+I+'.wav'
+                                    testFakeAfilePathnum_dtw ='report_files/wavs/test/numbered/test_fake_A_wav_dtw'+I+'.wav'
+                                    torchaudio.save(testRealBfilePathnum_dtw, real_wav_full_B_dtw ,sample_rate=fs)
+                                    torchaudio.save(testRealAfilePathnum_dtw, real_wav_full_A_dtw ,sample_rate=fs)
+                                    torchaudio.save(testFakeBfilePathnum_dtw, fake_wav_full_B_dtw ,sample_rate=fs)
+                                    torchaudio.save(testFakeAfilePathnum_dtw, fake_wav_full_A_dtw ,sample_rate=fs)
+                                    #pass
 
                             real_wav_full_A = real_wav_full_A.squeeze()
                             fake_wav_full_A = fake_wav_full_A.squeeze()
@@ -2919,7 +3047,7 @@ class MaskCycleGANVCTraining(object):
                             if ( Metric_Measure_Test_Active and Metric_Measure_Test_pesq ): 
                                 #print("\nMetric_Measure_Active & Metric_Measure_pesq: True")
                                 Path ='report_files/wavs/test/' 
-                                from pypesq import pesq
+                                #from pypesq import pesq
                                 
                                 
                                 """
@@ -3003,7 +3131,7 @@ class MaskCycleGANVCTraining(object):
                         d_loss_list.append(d_loss_full.item())
                         g_loss_list.append(g_loss_full.item())
                 
-                import numpy as np
+                #import numpy as np
                 self.logger._log_scalars(
                         scalar_dict={'A.1_g_lossTest': np.mean(np.array(g_loss_list)) ,
                                      'A.2_d_lossTest': np.mean(np.array(d_loss_list))
@@ -3013,6 +3141,7 @@ class MaskCycleGANVCTraining(object):
                 if ( Metric_Measure_Test_Active ):
                     if ( Metric_Measure_Test_mcd ):
                         mcd_test_mean      = np.mean( np.array(mcd_test_list)       )
+                        mcd_test_std       = np.std ( np.array(mcd_test_list)       )
                         #mcd_test_realAfakeBmean = np.mean( np.array(realAfakeB_mcd_list)       )
                         
                     # if ( Metric_Measure_Test_mcd ):
@@ -3020,17 +3149,24 @@ class MaskCycleGANVCTraining(object):
                     
                     if ( Metric_Measure_Test_stoi ):
                         stoi_test_mean      = np.mean( np.array(stoi_test_list)       )
+                        stoi_test_std       = np.std(  np.array(stoi_test_list)       )
                         #stoi_test_realAfakeBmean=np.mean(np.array(realA_fakeB_stoi_list) )
                                                  
                     if ( Metric_Measure_Test_cosinesim ):
                         cosinesim_test_mean = np.mean( np.array(cosinesim_test_list)  )
+                        cosinesim_test_std  = np.std( np.array(cosinesim_test_list)  )
+                        
                     if ( Metric_Measure_Test_nisqa ):
                         nisqa_test_mean     = np.mean( np.array(nisqa_test_list)      )
-                                           
+                        nisqa_test_std      =  np.std( np.array(nisqa_test_list)      )
+                        
                     if ( Metric_Measure_Test_pesq ):
-                        pesq_test_mean     = np.mean( np.array(pesq_test_list)        )
+                        pesq_test_mean     = np.mean( np.array(pesq_test_list)      )
+                        #pesq_test_std      =  np.std( np.array(pesq_test_list)      )
                     if ( Metric_Measure_Test_SDR ):
-                        sdr_test_mean      =  np.mean( np.array(sdr_test_list)        )
+                        sdr_test_mean      =  np.mean( np.array(sdr_test_list)      )
+                        #sdr_test_std       =  np.std(  np.array(sdr_test_list)      )
+                        
                     
                     
                     
@@ -3053,6 +3189,7 @@ class MaskCycleGANVCTraining(object):
                     scalar_dict = {} # TEST CODE
                     if Metric_Measure_Test_mcd:
                         scalar_dict['B.test_1.MCD']      = mcd_test_mean
+                        scalar_dict['B.test_15.MCD.std'] = mcd_test_std
                         #scalar_dict['B.test_1.1.MCDrAfB'] = mcd_test_realAfakeBmean
                         
                     # if Metric_Measure_Test_mcd:
@@ -3060,12 +3197,18 @@ class MaskCycleGANVCTraining(object):
                     
                     if Metric_Measure_Test_stoi:
                         scalar_dict['B.test_2.STOI']      = stoi_test_mean
+                        scalar_dict['B.test_15.STOI.std'] = stoi_test_std
                         #scalar_dict['B.test_2.1.STOIrAfB']= stoi_test_realAfakeBmean 
+                      
                         
                     if Metric_Measure_Test_cosinesim:
-                        scalar_dict['B.test_3.CosineSim'] = cosinesim_test_mean
+                        scalar_dict['B.test_3.SECS'] = cosinesim_test_mean
+                        scalar_dict['B.test_15.SECS.std'] = cosinesim_test_std
+                        
                     if Metric_Measure_Test_nisqa:
                         scalar_dict['B.test_4.NISQA']     = nisqa_test_mean 
+                        scalar_dict['B.test_15.NISQA.std']= nisqa_test_std
+                        
                     if Metric_Measure_Test_pesq:
                         scalar_dict['B.test_5.PESQ']      = pesq_test_mean 
                     if Metric_Measure_Test_SDR:
