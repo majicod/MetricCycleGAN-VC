@@ -2,4 +2,3 @@ MetricCycleGAN-VC uses the following diagram, mainly the same blocks of MaskCycl
 
 
 
-![Uploading MetricCycleGAN-finalDiagram03.04.21-17 (3).jpg…]()
